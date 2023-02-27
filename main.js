@@ -17,7 +17,7 @@ async function obtenerDatos() {
         const datos = await respuesta.json()
 
         // Trae los productos del cuarto al septimo del arreglo de la api
-        const productos = datos.slice(3,7)
+        const productos = datos.slice(3, 7)
         console.log(productos)
 
         iterarProductos(productos)
@@ -51,51 +51,54 @@ function iterarProductos(productos) {
 
     addBtns.forEach(btn => {
         btn.addEventListener('click', evento => {
-           
+
             // Buscar el id del producto
-            let actualId = parseInt (evento.target.parentElement.parentElement.id)
+            let actualId = parseInt(evento.target.parentElement.parentElement.id)
             console.log(actualId)
 
             // Con el id encontrar el objeto actual
             let productoActual = productos.find(producto => producto.id == actualId)
-            
-            if(productoActual.quantity === undefined){
+
+            if (productoActual.quantity === undefined) {
                 productoActual.quantity = 1
             }
 
             // Pregunta si el producto que estoy agregando ya existe
-            
+
             let existe = false
-            articulosCarrito.forEach(articulo =>{
-                if(actualId == articulo.id){
+            articulosCarrito.forEach(articulo => {
+                if (actualId == articulo.id) {
                     existe = true
                 }
             })
 
-            if (existe){
+            if (existe) {
                 productoActual.quantity++
-                
-            }else{
+
+            } else {
                 // Pasa el producto seleccionado al arreglo articulosCarrito 
                 articulosCarrito.push(productoActual)
             }
 
             imprimirCarrito()
-  
+
             // Actualizar el precio total del carrito
-            obtenerTotal() 
-                       
-            
+            obtenerTotal()
+
+            // Actualiza la cantidad de articulos
+            actualizarCantidadArtuculos()
+
+            eliminarArtuculo()
         })
     })
 }
 
-function obtenerTotal(){
+function obtenerTotal() {
     let sumTotal
-    let total = articulosCarrito.reduce((acc,item)=>{
-        sumTotal = acc + item.quantity*item.price
+    let total = articulosCarrito.reduce((acc, item) => {
+        sumTotal = acc + item.quantity * item.price
         return sumTotal
-    },0)
+    }, 0)
     // Imprime el total en el html
     precioFinal.innerHTML = `$${total}`
 }
@@ -118,5 +121,75 @@ function imprimirCarrito() {
                     <button class="btn btn-danger" type="button">REMOVE</button>
             </div>`
     })
-
+    eliminarArtuculo()
 }
+
+function actualizarCantidadArtuculos() {
+    let numeroArticulos = document.querySelectorAll('.cart-quantity-input')
+    numeroArticulos = [...numeroArticulos]
+
+    numeroArticulos.forEach(item => {
+        item.addEventListener('click', event => {
+            // Conseguir el titulo del producto
+            let tituloProductoActual = event.target.parentElement.parentElement.childNodes[1].innerText
+
+            let productoActualQuantity = parseInt(event.target.value)
+            console.log(productoActualQuantity)
+            console.log(tituloProductoActual)
+
+            // Busca el objeto con ese titulo
+            let tituloProductoObj = articulosCarrito.find(item => item.title == tituloProductoActual)
+            console.log(tituloProductoObj)
+
+            // Actualizar el numero de quantity
+            tituloProductoObj.quantity = productoActualQuantity
+
+            // Actualizar precio total
+            obtenerTotal()
+
+        })
+    })
+}
+
+function eliminarArtuculo() {
+    let borrarBtn = document.querySelectorAll('.btn-danger')
+    borrarBtn = [...borrarBtn]
+    borrarBtn.forEach(btn => {
+        btn.addEventListener('click', (event) => {
+
+            // Conseguir el titulo del producto
+            let tituloProductoActual = event.target.parentElement.parentElement.childNodes[1].innerText
+            console.log(tituloProductoActual)
+
+            // Busca el objeto con ese titulo
+            let tituloProductoObj = articulosCarrito.find(item => item.title == tituloProductoActual)
+            console.log(tituloProductoObj)
+
+            // Elimina el arreglo de cart
+            articulosCarrito = articulosCarrito.filter(item => item != tituloProductoObj)
+            console.log(articulosCarrito)
+
+            // Actualizar el carrito
+            imprimirCarrito()
+            obtenerTotal()
+            actualizarCantidadArtuculos()
+
+        })
+    })
+}
+
+
+let comprar = document.querySelector('.btn-purchase')
+comprar.addEventListener('click', () => {
+    if (precioFinal.textContent == 'Total' || precioFinal.textContent == '$0') {
+        Swal.fire('Carrito vacio')
+
+    } else {
+        Swal.fire({
+            icon: 'success',
+            text: `El pago de ${precioFinal.textContent} se realizó exitosamente`,
+
+        })
+    }
+
+})
